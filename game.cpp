@@ -40,7 +40,7 @@
 #define POINTY 42 //y coordinate where the point is written
 #define MENUX 10 // x coordinate for the starting row of the menus
 #define MENUY 5 // y coordinate for the starting row of the menus
-#define MENUDIF 2 // difference between menu rows 
+#define MENUDIF 2 // difference between menu rows
 #define MENUDIFX 20 // difference between menu columns
 #define MENSLEEPRATE 200000 // sleep time for menu input
 #define GAMESLEEPRATE 250000 // sleep time for player arrow keys
@@ -89,6 +89,7 @@ void printWindow(); //Draws the road on the screen
 void *newGame(void *); // manages new game
 void initGame(); // Assigns initial values to all control parameters for the new game
 void initWindow(); //Creates a new window and sets I/O settings
+void printTrees();//ayse
 int main()
 {
     playingGame.leftKey = leftKeyArrow;
@@ -122,7 +123,8 @@ void initGame()
 }
 void *newGame(void *)
 {
-    printWindow(); 
+    printWindow();
+    printTrees();
     drawCar(playingGame.current,2,1); // Draw the car the player is driving on the screen
     int key;
     while (playingGame.IsGameRunning) { //continue until the game is over
@@ -134,7 +136,7 @@ void *newGame(void *)
                         drawCar(playingGame.current,2,1); // draw player's car with new position
                 }
             }
-         usleep(GAMESLEEPRATE); // sleep 
+         usleep(GAMESLEEPRATE); // sleep
         }
 }
 void initWindow()
@@ -154,15 +156,47 @@ void printWindow()
     for (int i = 1; i < wHeight - 1; ++i) {
 		//mvprintw: Used to print text on the window, paramters order: y , x , string
         mvprintw(i, 2, "*"); //left side of the road
-        mvprintw(i, 0, "*"); 
+        mvprintw(i, 0, "*");
         mvprintw(i, wWidth - 1, "*");// right side of the road
         mvprintw(i, wWidth - 3, "*");
     }
     for (int i = lineLEN; i < wHeight -lineLEN ; ++i) { //line in the middle of the road
         mvprintw(i, lineX, "#");
     }
+
 }
 
+void printTrees()
+{
+      initscr();
+      start_color();
+      init_pair(1,COLOR_GREEN,COLOR_BLACK);
+      init_pair(2,COLOR_RED,COLOR_BLACK);
+
+      for (int i = 5; i < wHeight - 10; i+=10) {
+
+        attron(COLOR_PAIR(1));
+        mvprintw(i, wWidth+5, "*");
+
+        mvprintw(i+1, wWidth+4, "*");
+        mvprintw(i+1, wWidth+6, "*");
+
+        mvprintw(i+2, wWidth+3, "*");
+        mvprintw(i+2, wWidth+5, "*");
+        mvprintw(i+2, wWidth+7, "*");
+
+        attron(COLOR_PAIR(2));
+
+        mvprintw(i+3, wWidth+5, "#");
+
+        mvprintw(i+4, wWidth+5, "#");
+
+        refresh();
+        getch();
+        endwin();
+    }
+
+}
 void drawCar(Car c, int type, int direction )
 {
 	//If the user does not want to exit the game and the game continues
@@ -176,7 +210,7 @@ void drawCar(Car c, int type, int direction )
 			//4: Blue (COLOR_BLUE)
 			attron(COLOR_PAIR(c.ID));//enable color pair
             char drawnChar;
-            if (type == 1 ) 
+            if (type == 1 )
                drawnChar = ' '; // to remove car
             else
                drawnChar= c.chr; //  to draw char
@@ -189,7 +223,7 @@ void drawCar(Car c, int type, int direction )
             mvhline(c.y, c.x, drawnChar, c.width);// top line of rectangle
             mvhline(c.y + c.height - 1, c.x, drawnChar, c.width); //bottom line of rectangle
             if(direction == 0) // If it is any car on the road
-                mvhline(c.y + c.height, c.x, drawnChar, c.width); 
+                mvhline(c.y + c.height, c.x, drawnChar, c.width);
             else //player's card
                 mvhline(c.y -1, c.x, drawnChar, c.width);
 		    //mvvline: used to draw a vertical line in the window
@@ -202,7 +236,7 @@ void drawCar(Car c, int type, int direction )
             mvvline(c.y, c.x + c.width - 1, drawnChar, c.height); //right line of rectangle
             char text[5];
             if (type == 1 )
-                sprintf(text,"  "); //to remove point 
+                sprintf(text,"  "); //to remove point
             else
                  sprintf(text,"%d",c.height * c.width); // to show car's point in rectangle
             mvprintw(c.y+1, c.x +1, text);// display car's point in rectangle
