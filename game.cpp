@@ -130,11 +130,18 @@ void *newGame(void *)
     while (playingGame.IsGameRunning) { //continue until the game is over
             key = getch(); //Get input for the player to press the arrow keys
             if (key != KEYERROR) {
-                 if (key == playingGame.leftKey) { // If the left  key is pressed
+                 if (key == playingGame.leftKey && playingGame.current.x>4) { // If the left  key is pressed
                         drawCar(playingGame.current,1,1); // removes player's car from screen
                         playingGame.current.x-=playingGame.current.speed; // update position
                         drawCar(playingGame.current,2,1); // draw player's car with new position
                 }
+                
+                    if (key == playingGame.rightKey && playingGame.current.x<90) { 
+                        drawCar(playingGame.current,1,1); // removes player's car from screen
+                        playingGame.current.x+=playingGame.current.speed; // update position
+                        drawCar(playingGame.current,2,1); // draw player's car with new position
+                }
+                
             }
          usleep(GAMESLEEPRATE); // sleep
         }
