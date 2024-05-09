@@ -121,8 +121,7 @@ void initGame()
     playingGame.current.clr = COLOROFCAR;
     playingGame.current.chr = '*';
 }
-void *newGame(void *)
-{
+void *newGame(void *){
     printWindow();
     printTrees();
     drawCar(playingGame.current,2,1); // Draw the car the player is driving on the screen
@@ -130,14 +129,30 @@ void *newGame(void *)
     while (playingGame.IsGameRunning) { //continue until the game is over
             key = getch(); //Get input for the player to press the arrow keys
             if (key != KEYERROR) {
-                 if (key == playingGame.leftKey) { // If the left  key is pressed
+                 if (key == playingGame.leftKey && playingGame.current.x>4) { // If the left  key is pressed
                         drawCar(playingGame.current,1,1); // removes player's car from screen
                         playingGame.current.x-=playingGame.current.speed; // update position
                         drawCar(playingGame.current,2,1); // draw player's car with new position
                 }
+                else{
+                     drawCar(playingGame.current,1,1); 
+                     playingGame.current.x+=0; 
+                     drawCar(playingGame.current,2,1); 
+                }
+                 if (key == playingGame.rightKey  && playingGame.current.x<90) {    
+                     drawCar(playingGame.current,1,1); 
+                     playingGame.current.x+=playingGame.current.speed; 
+                     drawCar(playingGame.current,2,1); 
+                   
+            }
+            else{
+                 drawCar(playingGame.current,1,1); 
+                     playingGame.current.x+=0; 
+                     drawCar(playingGame.current,2,1); 
             }
          usleep(GAMESLEEPRATE); // sleep
         }
+}
 }
 void initWindow()
 {
@@ -243,4 +258,3 @@ void drawCar(Car c, int type, int direction )
             attroff(COLOR_PAIR(c.ID));// disable color pair
     }
 }
-//add branch emine
