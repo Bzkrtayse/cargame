@@ -90,16 +90,21 @@ void *newGame(void *); // manages new game
 void initGame(); // Assigns initial values to all control parameters for the new game
 void initWindow(); //Creates a new window and sets I/O settings
 void printTrees();//ayse
+void printMenu();//ayse
+
 int main()
 {
+
+initWindow();
+printMenu();
     playingGame.leftKey = leftKeyArrow;
     playingGame.rightKey = RightKeyArrow;
-    initGame();
-    initWindow();
+    //initGame();
     pthread_t th1; //create new thread
     pthread_create(&th1, NULL, newGame,NULL);// Run newGame function with thread
     pthread_join(th1, NULL); //Wait for the thread to finish, when the newGame function finishes, the thread will also finish.
     return 0;
+    
 }
 
 void initGame()
@@ -121,8 +126,7 @@ void initGame()
     playingGame.current.clr = COLOROFCAR;
     playingGame.current.chr = '*';
 }
-void *newGame(void *)
-{
+void *newGame(void *){
     printWindow();
     printTrees();
     drawCar(playingGame.current,2,1); // Draw the car the player is driving on the screen
@@ -130,14 +134,30 @@ void *newGame(void *)
     while (playingGame.IsGameRunning) { //continue until the game is over
             key = getch(); //Get input for the player to press the arrow keys
             if (key != KEYERROR) {
-                 if (key == playingGame.leftKey) { // If the left  key is pressed
+                 if (key == playingGame.leftKey && playingGame.current.x>4) { // If the left  key is pressed
                         drawCar(playingGame.current,1,1); // removes player's car from screen
                         playingGame.current.x-=playingGame.current.speed; // update position
                         drawCar(playingGame.current,2,1); // draw player's car with new position
                 }
+                else{
+                     drawCar(playingGame.current,1,1); 
+                     playingGame.current.x+=0; 
+                     drawCar(playingGame.current,2,1); 
+                }
+                 if (key == playingGame.rightKey  && playingGame.current.x<90) {    
+                     drawCar(playingGame.current,1,1); 
+                     playingGame.current.x+=playingGame.current.speed; 
+                     drawCar(playingGame.current,2,1); 
+                   
+            }
+            else{
+                 drawCar(playingGame.current,1,1); 
+                     playingGame.current.x+=0; 
+                     drawCar(playingGame.current,2,1); 
             }
          usleep(GAMESLEEPRATE); // sleep
         }
+}
 }
 void initWindow()
 {
@@ -150,6 +170,8 @@ void initWindow()
 	noecho();             // don't echo characters entered by the user
 	clear();              // clear the screen
     sleep(1);
+   
+
 }
 void printWindow()
 {
@@ -242,4 +264,91 @@ void drawCar(Car c, int type, int direction )
             mvprintw(c.y+1, c.x +1, text);// display car's point in rectangle
             attroff(COLOR_PAIR(c.ID));// disable color pair
     }
+}
+void printMenu(){
+
+        initscr();
+        start_color();
+        init_pair(1,COLOR_GREEN,COLOR_BLACK);
+        init_pair(2,COLOR_RED,COLOR_BLACK);
+        init_pair(3,COLOR_BLACK,COLOR_BLACK);
+
+        int input;//user input
+        int selected=1;//store the menu items state
+
+        bool isEnter=false;
+            while(!isEnter){
+            //clear();
+            int y=MENUY;
+            for(int i=0;i<mainMenuItem;i++){    
+                if(selected==(i+1)){
+                    attron(COLOR_PAIR(2));
+                    mvprintw(y,MENUX-2,"->");
+                    mvprintw(y,MENUX,"%s",mainMenu[i]);
+                    attroff(COLOR_PAIR(2));
+                }
+                else{
+                    attron(COLOR_PAIR(3));
+                    mvprintw(y,MENUX-2,"->");
+                    attroff(COLOR_PAIR(3));
+
+                    attron(COLOR_PAIR(1));
+                    mvprintw(y,MENUX,"%s",mainMenu[i]);
+                    attroff(COLOR_PAIR(1));
+                }
+                y+=MENUDIF;
+            }
+            refresh();
+            sleep(1);
+            input=getch();
+            switch (input)
+            {
+            case KEYDOWN:
+                if(selected==mainMenuItem){
+                    selected=mainMenuItem;
+                }
+                else selected++;
+                break;
+            case KEYPUP:
+                if(selected==1){
+                    selected=1;
+                }
+                else selected--;
+                break;
+            case ENTER:
+                isEnter=true;
+                break;
+            default:
+                break;
+            }
+            //refresh();
+    }
+        clear();
+        switch (selected)
+        {
+        case 1:
+            initGame();
+            break;
+        case 2:
+        printw("case2");
+            break;
+        case 3:
+        printw("case3");
+            break;
+        case 4:
+        printw("case4");
+            break;
+        case 5:
+        printw("case5");
+            break;
+        case 6:
+            return;
+        
+        default:
+            break;
+        }
+        
+        refresh();
+        sleep(5);
+        endwin();
 }
