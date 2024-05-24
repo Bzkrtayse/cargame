@@ -139,6 +139,7 @@ void *newGame(void *){
                         playingGame.current.x-=playingGame.current.speed; // update position
                         drawCar(playingGame.current,2,1); // draw player's car with new position
                 }
+<<<<<<< HEAD
                 else{
                      drawCar(playingGame.current,1,1); 
                      playingGame.current.x+=0; 
@@ -154,6 +155,15 @@ void *newGame(void *){
                  drawCar(playingGame.current,1,1); 
                      playingGame.current.x+=0; 
                      drawCar(playingGame.current,2,1); 
+=======
+                
+                    if (key == playingGame.rightKey && playingGame.current.x<90) { 
+                        drawCar(playingGame.current,1,1); // removes player's car from screen
+                        playingGame.current.x+=playingGame.current.speed; // update position
+                        drawCar(playingGame.current,2,1); // draw player's car with new position
+                }
+                
+>>>>>>> c76ae2fed82eb89f334bbb6b18b571c46e1bdeff
             }
          usleep(GAMESLEEPRATE); // sleep
         }
@@ -265,6 +275,7 @@ void drawCar(Car c, int type, int direction )
             attroff(COLOR_PAIR(c.ID));// disable color pair
     }
 }
+<<<<<<< HEAD
 void printMenu(){
 
         initscr();
@@ -352,3 +363,6 @@ void printMenu(){
         sleep(5);
         endwin();
 }
+=======
+//add branch emine
+>>>>>>> c76ae2fed82eb89f334bbb6b18b571c46e1bdeff
