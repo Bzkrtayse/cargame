@@ -91,18 +91,31 @@ void initGame(); // Assigns initial values to all control parameters for the new
 void initWindow(); //Creates a new window and sets I/O settings
 void printTrees();//ayse
 void printMenu();//ayse
+void settings();//emine
+void instructions();//emine
+int randomNum(int min,int max);//ayse
+void* enqueue(void*);//ayse
+pthread_mutex_t queue_mutex;
 
 int main()
 {
-
+srand(time(NULL));
 initWindow();
 printMenu();
     playingGame.leftKey = leftKeyArrow;
     playingGame.rightKey = RightKeyArrow;
-    //initGame();
     pthread_t th1; //create new thread
+    pthread_t thenqueue;
+    pthread_mutex_init(&queue_mutex, NULL);
+    queue_mutex = PTHREAD_MUTEX_INITIALIZER;
+
     pthread_create(&th1, NULL, newGame,NULL);// Run newGame function with thread
+    pthread_create(&thenqueue,NULL,enqueue,NULL);
     pthread_join(th1, NULL); //Wait for the thread to finish, when the newGame function finishes, the thread will also finish.
+    pthread_join(thenqueue,NULL);
+
+    pthread_mutex_destroy(&queue_mutex);
+
     return 0;
     
 }
@@ -139,31 +152,20 @@ void *newGame(void *){
                         playingGame.current.x-=playingGame.current.speed; // update position
                         drawCar(playingGame.current,2,1); // draw player's car with new position
                 }
-<<<<<<< HEAD
                 else{
-                     drawCar(playingGame.current,1,1); 
-                     playingGame.current.x+=0; 
-                     drawCar(playingGame.current,2,1); 
+                    drawCar(playingGame.current,1,1); 
+                    playingGame.current.x+=0; 
+                    drawCar(playingGame.current,2,1); 
                 }
-                 if (key == playingGame.rightKey  && playingGame.current.x<90) {    
-                     drawCar(playingGame.current,1,1); 
-                     playingGame.current.x+=playingGame.current.speed; 
-                     drawCar(playingGame.current,2,1); 
-                   
+                if (key == playingGame.rightKey  && playingGame.current.x<90) {    
+                    drawCar(playingGame.current,1,1); 
+                    playingGame.current.x+=playingGame.current.speed; 
+                    drawCar(playingGame.current,2,1); 
             }
             else{
-                 drawCar(playingGame.current,1,1); 
-                     playingGame.current.x+=0; 
-                     drawCar(playingGame.current,2,1); 
-=======
-                
-                    if (key == playingGame.rightKey && playingGame.current.x<90) { 
-                        drawCar(playingGame.current,1,1); // removes player's car from screen
-                        playingGame.current.x+=playingGame.current.speed; // update position
-                        drawCar(playingGame.current,2,1); // draw player's car with new position
-                }
-                
->>>>>>> c76ae2fed82eb89f334bbb6b18b571c46e1bdeff
+                drawCar(playingGame.current,1,1); 
+                    playingGame.current.x+=0; 
+                    drawCar(playingGame.current,2,1); 
             }
          usleep(GAMESLEEPRATE); // sleep
         }
@@ -185,6 +187,7 @@ void initWindow()
 }
 void printWindow()
 {
+    
     for (int i = 1; i < wHeight - 1; ++i) {
 		//mvprintw: Used to print text on the window, paramters order: y , x , string
         mvprintw(i, 2, "*"); //left side of the road
@@ -200,12 +203,12 @@ void printWindow()
 
 void printTrees()
 {
-      initscr();
-      start_color();
-      init_pair(1,COLOR_GREEN,COLOR_BLACK);
-      init_pair(2,COLOR_RED,COLOR_BLACK);
+    initscr();
+    start_color();
+    init_pair(1,COLOR_GREEN,COLOR_BLACK);
+    init_pair(2,COLOR_RED,COLOR_BLACK);
 
-      for (int i = 5; i < wHeight - 10; i+=10) {
+    for (int i = 5; i < wHeight - 10; i+=10) {
 
         attron(COLOR_PAIR(1));
         mvprintw(i, wWidth+5, "*");
@@ -216,18 +219,17 @@ void printTrees()
         mvprintw(i+2, wWidth+3, "*");
         mvprintw(i+2, wWidth+5, "*");
         mvprintw(i+2, wWidth+7, "*");
-
+        attroff(COLOR_PAIR(1));
         attron(COLOR_PAIR(2));
 
         mvprintw(i+3, wWidth+5, "#");
 
         mvprintw(i+4, wWidth+5, "#");
-
+        attroff(COLOR_PAIR(2));
         refresh();
         getch();
         endwin();
     }
-
 }
 void drawCar(Car c, int type, int direction )
 {
@@ -275,7 +277,6 @@ void drawCar(Car c, int type, int direction )
             attroff(COLOR_PAIR(c.ID));// disable color pair
     }
 }
-<<<<<<< HEAD
 void printMenu(){
 
         initscr();
@@ -310,7 +311,7 @@ void printMenu(){
                 y+=MENUDIF;
             }
             refresh();
-            sleep(1);
+            usleep(MENSLEEPRATE);
             input=getch();
             switch (input)
             {
@@ -344,10 +345,12 @@ void printMenu(){
         printw("case2");
             break;
         case 3:
-        printw("case3");
+        instructions();
+        printMenu();
             break;
         case 4:
-        printw("case4");
+        settings();
+        printMenu();
             break;
         case 5:
         printw("case5");
@@ -361,8 +364,141 @@ void printMenu(){
         
         refresh();
         sleep(5);
+  endwin();
+}
+
+void settings(){
+    initscr();
+        start_color();
+        init_pair(1,COLOR_GREEN,COLOR_BLACK);
+        init_pair(2,COLOR_RED,COLOR_BLACK);
+        init_pair(3,COLOR_BLACK,COLOR_BLACK);
+
+        int input;//user input
+        int selected=1;//store the menu items state
+        int leftKey=0;
+        int rightKey=0;
+        bool isEnter=false;
+            while(!isEnter){
+            //clear();
+            int y=MENUY;
+            for(int i=0;i<settingMenuItem;i++){    
+                if(selected==(i+1)){
+                    attron(COLOR_PAIR(2));
+                    mvprintw(y,MENUX-2,"->");
+                    mvprintw(y,MENUX,"%s",settingMenu[i]);
+                    attroff(COLOR_PAIR(2));
+                }
+                else{
+                    attron(COLOR_PAIR(3));
+                    mvprintw(y,MENUX-2,"->");
+                    attroff(COLOR_PAIR(3));
+
+                    attron(COLOR_PAIR(1));
+                    mvprintw(y,MENUX,"%s",settingMenu[i]);
+                    attroff(COLOR_PAIR(1));
+                }
+                y+=MENUDIF;
+            }
+            refresh();
+            sleep(1);
+            input=getch();
+            switch (input)
+            {
+            case KEYDOWN:
+                if(selected==settingMenuItem){
+                    selected=settingMenuItem;
+                }
+                else selected++;
+                break;
+            case KEYPUP:
+                if(selected==1){
+                    selected=1;
+                }
+                else selected--;
+                break;
+            case ENTER:
+                isEnter=true;
+                break;
+            default:
+                break;
+            }
+            //refresh();
+    }
+        clear();
+        switch (selected)
+        {
+        case 1:
+           leftKey=leftKeyArrow;
+           rightKey=RightKeyArrow;
+            break;
+        case 2:
+         leftKey='A';
+         leftKey='D';
+                  break;
+               default:
+            break;
+        }
+        
+        refresh();
+        sleep(5);
         endwin();
 }
-=======
-//add branch emine
->>>>>>> c76ae2fed82eb89f334bbb6b18b571c46e1bdeff
+
+void instructions(){
+    
+    int x =10, y = 5;
+    init_pair(1, COLOR_GREEN, COLOR_BLACK);
+    attron(COLOR_PAIR(1));
+    char text[50];
+    sprintf(text,"< or A: moves the car to the left");
+    mvprintw(y, x, text);
+    y+= MENUDIF;
+    sprintf(text,"> or D: moves the car to the right");
+    mvprintw(y, x, text);
+    y+= MENUDIF;
+    sprintf(text,"ESC : exists the game without saving");
+    mvprintw(y, x, text);
+    y+= MENUDIF;
+    sprintf(text,"S: saves and exits the game");
+    mvprintw(y, x, text);
+    attroff(COLOR_PAIR(1));
+    refresh();
+    initWindow();
+	refresh();
+}
+void* enqueue(void*){
+    int id=10;
+    int point=0;
+    while(playingGame.IsGameRunning){
+        
+        if(playingGame.cars.size()<5){
+        Car newCar;   
+        newCar.ID=id;
+        newCar.height=randomNum(5,7);   
+        newCar.width=randomNum(5,7);
+        newCar.speed=newCar.height/2;
+        newCar.clr=randomNum(1,4);
+        newCar.x=randomNum(5,90);// might create cars on the middle line .. I'll handle it later.
+        newCar.y=randomNum(-10,0);
+        newCar.isExist=false;
+        int randomShape=randomNum(1,3);
+        if(randomShape==1) newCar.chr='*';
+        else if(randomShape==2) newCar.chr='#';
+        else newCar.chr='+';
+        id++;
+        //printw("Carid %d: carclr: %d  y: %d  x:%d",newCar.ID,newCar.clr,newCar.y,newCar.x);
+        pthread_mutex_lock(&queue_mutex);
+        playingGame.cars.push(newCar);
+        //printw("car added to queue");
+        pthread_mutex_unlock(&queue_mutex);
+        usleep(EnQueueSleep);
+        }
+        
+    }
+    return 0;
+}
+int randomNum(int min,int max){
+    int num= rand()% (max-min+1)+min;
+    return num;
+}
