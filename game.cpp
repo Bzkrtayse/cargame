@@ -52,7 +52,7 @@
 #define settingMenuItem 2 // number of options in the setting menu
 #define mainMenuItem 6 // number of options in the main menu
 using namespace std;
-typedef struct Car{ //
+typedef struct Car{ 
     int ID;
     int x;
     int y;
@@ -76,6 +76,7 @@ typedef struct Game{
     int moveSpeed;
     int points;
 }Game;
+
 Game playingGame; // Global variable used for new game
 const char *gameTxt =  "game.txt";
 const char *CarsTxt =  "cars.txt";
@@ -90,18 +91,31 @@ void *newGame(void *); // manages new game
 void initGame(); // Assigns initial values to all control parameters for the new game
 void initWindow(); //Creates a new window and sets I/O settings
 void printTrees();//ayse
+void printMenu();//ayse
+void settings();//emine
+void instructions();//emine
+int randomNum(int min,int max);//ayse
+void* enqueue(void*);//ayse
+void *dequeue (void*);//emine
+void *moveCar(void *data);//ayse
+void *printPoint(void*);//emine
+void* writePointText(void*);//emine
+
 int main()
 {
-    playingGame.leftKey = leftKeyArrow;
-    playingGame.rightKey = RightKeyArrow;
-    initGame();
-    initWindow();
+    while(true){
+        initGame();
+        srand(time(NULL));
+        initWindow();
+        printMenu();
+   
     pthread_t th1; //create new thread
     pthread_create(&th1, NULL, newGame,NULL);// Run newGame function with thread
     pthread_join(th1, NULL); //Wait for the thread to finish, when the newGame function finishes, the thread will also finish.
-    return 0;
+ }
+       
 }
-
+    
 void initGame()
 {
     playingGame.cars = queue<Car>();
@@ -124,6 +138,12 @@ void initGame()
 void *newGame(void *){
     printWindow();
     printTrees();
+    pthread_t thenqueue;
+    pthread_t thdequeue;
+    pthread_t thpoints;
+    pthread_create(&thenqueue,NULL,enqueue,NULL);
+    pthread_create(&thdequeue,NULL,dequeue,NULL);
+    pthread_create(&thpoints,NULL,printPoint,NULL);
     drawCar(playingGame.current,2,1); // Draw the car the player is driving on the screen
     int key;
     while (playingGame.IsGameRunning) { //continue until the game is over
@@ -135,27 +155,30 @@ void *newGame(void *){
                         drawCar(playingGame.current,2,1); // draw player's car with new position
                 }
                 else{
-                     drawCar(playingGame.current,1,1); 
-                     playingGame.current.x+=0; 
-                     drawCar(playingGame.current,2,1); 
+                    drawCar(playingGame.current,1,1); 
+                    playingGame.current.x+=0; 
+                    drawCar(playingGame.current,2,1); 
                 }
-                 if (key == playingGame.rightKey  && playingGame.current.x<90) {    
-                     drawCar(playingGame.current,1,1); 
-                     playingGame.current.x+=playingGame.current.speed; 
-                     drawCar(playingGame.current,2,1); 
-                   
+                if (key == playingGame.rightKey  && playingGame.current.x<90) {    
+                    drawCar(playingGame.current,1,1); 
+                    playingGame.current.x+=playingGame.current.speed; 
+                    drawCar(playingGame.current,2,1); 
             }
             else{
-                 drawCar(playingGame.current,1,1); 
-                     playingGame.current.x+=0; 
-                     drawCar(playingGame.current,2,1); 
+                drawCar(playingGame.current,1,1); 
+                    playingGame.current.x+=0; 
+                    drawCar(playingGame.current,2,1); 
             }
-         usleep(GAMESLEEPRATE); // sleep
+         usleep(GAMESLEEPRATE); 
         }
 }
+
+pthread_join(thenqueue,NULL);
+pthread_join(thdequeue,NULL);
+pthread_join(thpoints,NULL);
 }
 void initWindow()
-{
+{  
 	initscr();            // initialize the ncurses window
 	start_color();        // enable color manipulation
 	keypad(stdscr, true); // enable the keypad for the screen
@@ -168,7 +191,7 @@ void initWindow()
 }
 void printWindow()
 {
-    for (int i = 1; i < wHeight - 1; ++i) {
+     for (int i = 1; i < wHeight - 1; ++i) {
 		//mvprintw: Used to print text on the window, paramters order: y , x , string
         mvprintw(i, 2, "*"); //left side of the road
         mvprintw(i, 0, "*");
@@ -178,17 +201,14 @@ void printWindow()
     for (int i = lineLEN; i < wHeight -lineLEN ; ++i) { //line in the middle of the road
         mvprintw(i, lineX, "#");
     }
-
 }
-
 void printTrees()
 {
-      initscr();
-      start_color();
-      init_pair(1,COLOR_GREEN,COLOR_BLACK);
-      init_pair(2,COLOR_RED,COLOR_BLACK);
-
-      for (int i = 5; i < wHeight - 10; i+=10) {
+    initscr();
+    start_color();
+    init_pair(1,COLOR_GREEN,COLOR_BLACK);
+    init_pair(2,COLOR_RED,COLOR_BLACK);
+    for (int i = 5; i < wHeight - 10; i+=10) {
 
         attron(COLOR_PAIR(1));
         mvprintw(i, wWidth+5, "*");
@@ -199,18 +219,17 @@ void printTrees()
         mvprintw(i+2, wWidth+3, "*");
         mvprintw(i+2, wWidth+5, "*");
         mvprintw(i+2, wWidth+7, "*");
-
+        attroff(COLOR_PAIR(1));
         attron(COLOR_PAIR(2));
 
         mvprintw(i+3, wWidth+5, "#");
 
         mvprintw(i+4, wWidth+5, "#");
-
+        attroff(COLOR_PAIR(2));
         refresh();
         getch();
         endwin();
     }
-
 }
 void drawCar(Car c, int type, int direction )
 {
@@ -256,5 +275,315 @@ void drawCar(Car c, int type, int direction )
                  sprintf(text,"%d",c.height * c.width); // to show car's point in rectangle
             mvprintw(c.y+1, c.x +1, text);// display car's point in rectangle
             attroff(COLOR_PAIR(c.ID));// disable color pair
+    }
+}
+void printMenu(){
+        initscr();
+        start_color();
+        init_pair(1,COLOR_GREEN,COLOR_BLACK);
+        init_pair(2,COLOR_RED,COLOR_BLACK);
+        init_pair(3,COLOR_BLACK,COLOR_BLACK);
+
+        int input;
+        int selected=1;
+
+        bool isEnter=false;
+            while(!isEnter){
+            int y=MENUY;
+            for(int i=0;i<mainMenuItem;i++){    
+                if(selected==(i+1)){
+                    attron(COLOR_PAIR(2));
+                    mvprintw(y,MENUX-2,"->");
+                    mvprintw(y,MENUX,"%s",mainMenu[i]);
+                    attroff(COLOR_PAIR(2));
+                }
+                else{
+                    attron(COLOR_PAIR(3));
+                    mvprintw(y,MENUX-2,"->");
+                    attroff(COLOR_PAIR(3));
+
+                    attron(COLOR_PAIR(1));
+                    mvprintw(y,MENUX,"%s",mainMenu[i]);
+                    attroff(COLOR_PAIR(1));
+                }
+                y+=MENUDIF;
+            }
+            refresh();
+            usleep(MENSLEEPRATE);
+            input=getch();
+            switch (input)
+            {
+            case KEYDOWN:
+                if(selected==mainMenuItem){
+                    selected=mainMenuItem;
+                }
+                else selected++;
+                break;
+            case KEYPUP:
+                if(selected==1){
+                    selected=1;
+                }
+                else selected--;
+                break;
+            case ENTER:
+                isEnter=true;
+                break;
+            default:
+                break;
+            }
+    }
+        clear();
+        switch (selected)
+        {
+        case 1:
+        if( playingGame.leftKey !=leftKeyA &&  playingGame.rightKey!=RightKeyD){
+              playingGame.leftKey=leftKeyArrow;
+           playingGame.rightKey=RightKeyArrow;
+        }
+        initGame();
+            break;
+        case 2:
+        printw("case2");
+            break;
+        case 3:
+        instructions();
+        printMenu();
+            break;
+        case 4:
+        settings();
+        printMenu();
+            break;
+        case 5:
+        printw("case5");
+            break;
+        case 6:
+            exit(1);
+        
+        default:
+            break;
+        }
+        refresh();
+        sleep(2);
+  endwin();
+}
+void settings(){
+    initscr();
+        start_color();
+        init_pair(1,COLOR_GREEN,COLOR_BLACK);
+        init_pair(2,COLOR_RED,COLOR_BLACK);
+        init_pair(3,COLOR_BLACK,COLOR_BLACK);
+        int input;
+        int selected=1;
+        bool isEnter=false;
+            while(!isEnter){
+            
+            int y=MENUY;
+            for(int i=0;i<settingMenuItem;i++){    
+                if(selected==(i+1)){
+                    attron(COLOR_PAIR(2));
+                    mvprintw(y,MENUX-2,"->");
+                    mvprintw(y,MENUX,"%s",settingMenu[i]);
+                    attroff(COLOR_PAIR(2));
+                }
+                else{
+                    attron(COLOR_PAIR(3));
+                    mvprintw(y,MENUX-2,"->");
+                    attroff(COLOR_PAIR(3));
+
+                    attron(COLOR_PAIR(1));
+                    mvprintw(y,MENUX,"%s",settingMenu[i]);
+                    attroff(COLOR_PAIR(1));
+                }
+                y+=MENUDIF;
+            }
+            refresh();
+            sleep(1);
+            input=getch();
+            switch (input)
+            {
+            case KEYDOWN:
+                if(selected==settingMenuItem){
+                    selected=settingMenuItem;
+                }
+                else selected++;
+                break;
+            case KEYPUP:
+                if(selected==1){
+                    selected=1;
+                }
+                else selected--;
+                break;
+            case ENTER:
+                isEnter=true;
+                break;
+            default:
+                break;
+            }
+            
+    }
+        clear();
+        switch (selected)
+        {
+        case 1:
+           playingGame.leftKey=leftKeyArrow;
+           playingGame.rightKey=RightKeyArrow;
+            
+            break;
+        case 2:
+         playingGame.leftKey=leftKeyA;
+         playingGame.rightKey=RightKeyD;
+                  break;
+               default:
+          
+            break;
+        }
+        refresh();
+        sleep(5);
+        endwin();
+}
+void instructions(){
+     int x =10, y = 5;
+    init_pair(1, COLOR_GREEN, COLOR_BLACK);
+    attron(COLOR_PAIR(1));
+    char text[50];
+    sprintf(text,"< or A: moves the car to the left");
+    mvprintw(y, x, text);
+    y+= MENUDIF;
+    sprintf(text,"> or D: moves the car to the right");
+    mvprintw(y, x, text);
+    y+= MENUDIF;
+    sprintf(text,"ESC : exists the game without saving");
+    mvprintw(y, x, text);
+    y+= MENUDIF;
+    sprintf(text,"S: saves and exits the game");
+    mvprintw(y, x, text);
+    attroff(COLOR_PAIR(1));
+    refresh();
+    initWindow();
+	refresh();
+}
+void* enqueue(void*){
+    int id=IDSTART;
+    int rnd;
+    int randomX1;
+    int randomX2;
+    while(playingGame.IsGameRunning){
+       if(playingGame.cars.size()<5){
+        Car newCar;   
+        newCar.ID=id;
+        newCar.height=randomNum(5,7);   
+        newCar.width=randomNum(5,7);
+        newCar.speed=newCar.height/2;
+        newCar.clr=randomNum(1,4);
+        rnd=randomNum(1,2);
+        randomX1=randomNum(5,lineX-newCar.width-1);
+        randomX2=randomNum(lineX+1,90);
+        if(rnd==1){
+            newCar.x=randomX1;
+        }
+        else {
+            newCar.x=randomX2;
+        }
+        newCar.y=randomNum(-10,0);
+        newCar.isExist=false;
+        int randomShape=randomNum(1,3);
+        if(randomShape==1) newCar.chr='*';
+        else if(randomShape==2) newCar.chr='#';
+        else newCar.chr='+';
+
+        id++;
+        playingGame.cars.push(newCar);
+        usleep(EnQueueSleep);
+        }
+        
+    }
+    return 0;
+}
+int randomNum(int min,int max){
+    int num= rand()% (max-min+1)+min;
+    return num;
+}
+void *dequeue (void*){
+    pthread_t arr[10];
+    int tcount=0;
+    while (playingGame.IsGameRunning) {
+     Car *frontcar= new Car(playingGame.cars.front());
+        if (!playingGame.cars.empty()) {
+            pthread_create(arr,NULL,moveCar,(void*)frontcar);
+            tcount++;
+            playingGame.cars.pop();        
+     }
+     int rndsleepTime =randomNum(1,2);
+     if(rndsleepTime==1){
+        sleep(DeQueueSleepMin);
+     }
+     else 
+     sleep(4);
+} if(!playingGame.IsGameRunning){
+     for (int i = 0; i < tcount; i++) {
+        pthread_join(arr[i], NULL);
+    }
+}
+
+
+return NULL;
+}
+void *moveCar(void *data){
+    Car *carOnRoad = (Car *)data;
+    while(carOnRoad->y<35){
+            drawCar(*carOnRoad,1,0);
+            carOnRoad->y+=1+rand()%carOnRoad->speed;
+            drawCar(*carOnRoad,2,0);
+            usleep(playingGame.moveSpeed);
+    }
+    if(carOnRoad->y >= 35){
+        drawCar(*carOnRoad,1,0);
+        playingGame.points+=(carOnRoad->height)*(carOnRoad->width);
+    }
+    int x1=playingGame.current.x;
+    int y1=playingGame.current.y;
+    int w1=playingGame.current.width;
+    int h1=playingGame.current.height;
+    int x2=carOnRoad->x;
+    int y2=carOnRoad->y;
+    int w2=carOnRoad->width;
+    int h2=carOnRoad->height;
+   if( x1<x2+w2 && x1+w1>x2 && y1-h1<=y2  ){
+        pthread_t th; 
+        playingGame.IsGameRunning=false;
+        pthread_create(&th,NULL,writePointText,NULL);
+        clear();
+        initWindow();
+        initGame();
+        printMenu();
+        refresh();
+          pthread_join(th,NULL);
+  }
+    else
+    drawCar(*carOnRoad,1,0);
+}
+void *printPoint(void*){
+      while(1){
+        int t=levelBound;
+        if(playingGame.points >= t && playingGame.level!=MAXSLEVEL){
+             playingGame.level++;
+            playingGame.moveSpeed -= DRATESPEED;
+            mvprintw(POINTY, POINTX,"Point :%d",playingGame.points);
+           t+=levelBound;
+            } 
+            else{ 
+              mvprintw(POINTY, POINTX,"Point :%d",playingGame.points);
+              refresh();
+           }
+        }
+} 
+void* writePointText(void*)
+{
+    if(playingGame.IsGameRunning==false){
+    pthread_mutex_lock(&playingGame.mutexFile);
+    FILE *file=fopen(pointsTxt,"a+");
+    fprintf(file," %d",playingGame.points);
+    pthread_mutex_unlock(&playingGame.mutexFile);
+    sleep(1);
     }
 }
